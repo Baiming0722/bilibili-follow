@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-TW" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Bilibili 特注 - 極致 3D 空間關注中心</title>
+    
+    <!-- PWA 配置 -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#090a0f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Bili特注" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    
+    <!-- 預載字體 (現代高級質感 Outfit + Noto Sans TC) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#06070b] text-slate-100 antialiased selection:bg-[#fb7299] selection:text-white min-h-screen overflow-x-hidden tabular-nums">
+    <!-- 全局細緻噪點顆粒微紋理 (SVG Grain Overlay，打破死板扁平感) -->
+    <div class="fixed inset-0 pointer-events-none z-50 opacity-[0.028] mix-blend-screen bg-noise" aria-hidden="true"></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

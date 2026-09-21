@@ -1,0 +1,49 @@
+{
+  "name": "Bilibili 特別關注",
+  "short_name": "Bili特注",
+  "description": "高端 3D 空間關注中心與零登入即時追蹤",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#06070b",
+  "theme_color": "#090a0f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "綜合動態",
+      "short_name": "動態",
+      "description": "查看關注 UP 主最新動態",
+      "url": "/?view=feed",
+      "icons": [{ "src": "/favicon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "直播看板",
+      "short_name": "直播",
+      "description": "即時查看開播狀況",
+      "url": "/?view=live",
+      "icons": [{ "src": "/favicon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "影片網格",
+      "short_name": "影片",
+      "description": "瀏覽 UP 主最新與熱門影片",
+      "url": "/?view=videos",
+      "icons": [{ "src": "/favicon.svg", "sizes": "96x96" }]
+    }
+  ],
+  "categories": ["entertainment", "multimedia", "social"]
+}

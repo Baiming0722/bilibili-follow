@@ -1,0 +1,910 @@
+@import "tailwindcss";
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   VIEW TRANSITION STAGE (流體視圖切換與硬體加速淡入)
+   ========================================================================== */
+@keyframes view-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.view-fade-enter {
+  animation: view-fade-in 220ms var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+
+/* 視圖退場動畫 */
+@keyframes view-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985) translateY(8px);
+  }
+}
+
+.view-fade-exit {
+  animation: view-fade-out 180ms var(--ease-out) forwards;
+  will-change: transform, opacity;
+}
+
+/* Lightbox 動畫 (進場 / 退場) */
+@keyframes lightbox-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lightbox-enter {
+  animation: lightbox-fade-in 200ms var(--ease-out) both;
+}
+
+@keyframes lightbox-fade-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.92); }
+}
+
+.lightbox-exit {
+  animation: lightbox-fade-out 200ms var(--ease-out) forwards;
+}
+
+/* Toast 退場 */
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+.toast-exit {
+  animation: toast-slide-out 200ms var(--ease-out) forwards;
+}
+
+/* 內容淡入（骨架屏到實際內容的平滑過渡） */
+@keyframes content-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-reveal {
+  animation: content-reveal 300ms var(--ease-cinematic) both;
+}
+
+/* 已讀卡片推遠效果 (移除 filter: saturate，改用純 opacity 與 transform 確保 GPU 合成流暢) */
+.card-read-recede {
+  transition: transform 400ms var(--ease-cinematic), opacity 400ms var(--ease-cinematic);
+}
+
+.card-read-recede.is-read {
+  transform: scale(0.975);
+  opacity: 0.65;
+}
+
+/* ==========================================================================
+   TOAST ANIMATIONS & PROGRESS BAR (彈窗流暢滑入與 6s 倒數進度條)
+   ========================================================================== */
+@keyframes toast-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-enter {
+  animation: toast-slide-in 240ms var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+
+@keyframes toast-progress-shrink {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+.toast-progress-bar {
+  animation: toast-progress-shrink 6s linear forwards;
+  will-change: width;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    font-family: 'Outfit', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+    background-color: #05060a;
+    color: #f1f5f9;
+    overflow-x: hidden;
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* 噪點顆粒微紋理 (SVG Noise Texture) */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* 3D 空間透視與層次感 */
+.perspective-container {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.perspective-deep {
+  perspective: 1800px;
+  transform-style: preserve-3d;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* ==========================================================================
+   DOUBLE-BEZEL (Doppelrand / 雙層工藝硬體架構)
+   外層：金屬/玻璃托盤 (Outer Shell) + 內層：獨立深邃核心 (Inner Core)
+   ========================================================================== */
+.bezel-shell {
+  position: relative;
+  padding: 6px;
+  border-radius: 1.75rem; /* ~rounded-3xl */
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 60%, rgba(0, 0, 0, 0.4) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 20px 40px -15px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  transition: transform 0.4s var(--ease-spring), 
+              box-shadow 0.4s var(--ease-spring), 
+              border-color 0.4s var(--ease-spring);
+}
+
+.bezel-shell-interactive {
+  transform: translateZ(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bezel-shell-interactive:hover {
+    transform: translateY(-4px) translateZ(8px);
+    border-color: rgba(251, 114, 153, 0.35);
+    box-shadow: 
+      0 28px 55px -12px rgba(0, 0, 0, 0.9),
+      0 0 35px -5px rgba(251, 114, 153, 0.2),
+      0 0 20px -5px rgba(0, 174, 236, 0.15),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.bezel-core {
+  position: relative;
+  border-radius: calc(1.75rem - 6px);
+  background: linear-gradient(155deg, #0e1222 0%, #080a14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+/* 雙層工藝 - 直播全息舞台專屬霓虹微光托盤 */
+.bezel-shell-stage {
+  padding: 6px;
+  border-radius: 2rem;
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.25) 0%, rgba(251, 114, 153, 0.1) 40%, rgba(10, 12, 22, 0.6) 100%);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  box-shadow: 
+    0 22px 50px -10px rgba(0, 0, 0, 0.85),
+    0 0 30px 0 rgba(239, 68, 68, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bezel-shell-stage:hover {
+    transform: translateY(-5px) scale-[1.01] translateZ(10px);
+    box-shadow: 
+      0 32px 65px -12px rgba(0, 0, 0, 0.95),
+      0 0 45px 5px rgba(239, 68, 68, 0.35),
+      0 0 25px 0 rgba(251, 114, 153, 0.3);
+  }
+}
+
+.bezel-core-stage {
+  border-radius: calc(2rem - 6px);
+  background: linear-gradient(155deg, #150e18 0%, #0a0812 100%);
+  border: 1px solid rgba(251, 114, 153, 0.2);
+  box-shadow: 
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -2px 4px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================================
+   FLOATING ISLAND (懸浮導航島)
+   ========================================================================== */
+.floating-island {
+  background: linear-gradient(135deg, rgba(16, 20, 35, 0.82) 0%, rgba(9, 11, 20, 0.88) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 24px 50px -10px rgba(0, 0, 0, 0.85),
+    0 0 25px -5px rgba(251, 114, 153, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   AMBIENT ATMOSPHERIC GLOW ORBS (電影感環境光球動畫 - 獨立 GPU 合成圖層，純 transform)
+   ========================================================================== */
+@keyframes orb-float-1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(36px, 24px, 0) scale(1.12);
+  }
+}
+
+@keyframes orb-float-2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-30px, -20px, 0) scale(1.15);
+  }
+}
+
+.ambient-orb-pink {
+  animation: orb-float-1 16s ease-in-out infinite;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.ambient-orb-blue {
+  animation: orb-float-2 20s ease-in-out infinite;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* ==========================================================================
+   ANIMATED SOUNDWAVE EQUALIZER (動態音波等化器 - 8 根跳動霓虹音波柱)
+   ========================================================================== */
+@keyframes soundwave {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.6;
+    transform: scaleY(0.6);
+  }
+  50% {
+    height: 22px;
+    opacity: 1;
+    transform: scaleY(1.1);
+  }
+}
+
+.soundwave-bar {
+  width: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ff85a7 0%, #ef4444 100%);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.85);
+  animation: soundwave 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform-origin: bottom;
+  will-change: height, transform, opacity;
+}
+
+.soundwave-bar:nth-child(1) { animation-delay: 0.0s; height: 6px; }
+.soundwave-bar:nth-child(2) { animation-delay: 0.25s; height: 16px; }
+.soundwave-bar:nth-child(3) { animation-delay: 0.5s; height: 10px; }
+.soundwave-bar:nth-child(4) { animation-delay: 0.15s; height: 18px; }
+.soundwave-bar:nth-child(5) { animation-delay: 0.4s; height: 8px; }
+.soundwave-bar:nth-child(6) { animation-delay: 0.2s; height: 14px; }
+.soundwave-bar:nth-child(7) { animation-delay: 0.6s; height: 20px; }
+.soundwave-bar:nth-child(8) { animation-delay: 0.35s; height: 12px; }
+
+/* 多層漣漪光環 (Multi-layer Live Ripples) */
+@keyframes ripple-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+.live-ripple-1 {
+  animation: ripple-ring 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.live-ripple-2 {
+  animation: ripple-ring 2.2s 0.75s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.live-ripple-3 {
+  animation: ripple-ring 2.2s 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ==========================================================================
+   DRAWER ACCORDION (CSS 零回流平滑網格摺疊抽屜)
+   ========================================================================== */
+.drawer-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms var(--ease-spring);
+}
+
+.drawer-accordion.is-open {
+  grid-template-rows: 1fr;
+}
+
+.drawer-accordion-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 評論串級聯浮現 (Cascading Staggered Comments) */
+@keyframes comment-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.comment-item-cascade {
+  animation: comment-appear 240ms var(--ease-cinematic) both;
+  will-change: transform, opacity;
+}
+
+/* 微引力磁吸懸浮 (Magnetic Levitation Effect) */
+.magnetic-hover {
+  transition: transform 220ms var(--ease-spring), box-shadow 220ms var(--ease-spring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .magnetic-hover:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 25px -5px rgba(251, 114, 153, 0.25), 0 0 15px rgba(0, 174, 236, 0.2);
+  }
+}
+
+/* 果凍選中環 (Jelly Selected Ring) */
+.jelly-ring-active {
+  box-shadow: 0 0 0 4px rgba(251, 114, 153, 0.5), 0 8px 24px rgba(251, 114, 153, 0.35);
+  transform: scale(1.06);
+  transition: transform 260ms var(--ease-spring), box-shadow 260ms var(--ease-spring), border-color 260ms var(--ease-spring);
+}
+
+/* ==========================================================================
+   SPATIAL 3D & TELEMETRY HUD (全息空間與 3D 景深)
+   ========================================================================== */
+.translate-z-10 { transform: translateZ(10px); }
+.translate-z-20 { transform: translateZ(20px); }
+.translate-z-30 { transform: translateZ(30px); }
+.translate-z-35 { transform: translateZ(35px); }
+.translate-z-40 { transform: translateZ(40px); }
+.translate-z-50 { transform: translateZ(50px); }
+
+/* 全息地平線空間網格 */
+.spatial-horizon-grid {
+  background-image: 
+    linear-gradient(rgba(0, 174, 236, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(251, 114, 153, 0.12) 1px, transparent 1px);
+  background-size: 50px 50px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 80%);
+}
+
+/* 宇宙微塵全息點 (獨立 GPU 合成圖層，純 transform 浮游) */
+@keyframes dust-float-1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(12px, -24px, 0) scale(1.08);
+  }
+}
+
+@keyframes dust-float-2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-14px, 18px, 0) scale(1.1);
+  }
+}
+
+.cosmic-dust-layer {
+  background-image: 
+    radial-gradient(1.5px 1.5px at 15% 20%, rgba(255, 255, 255, 0.7) 100%, transparent 0),
+    radial-gradient(1.5px 1.5px at 35% 75%, rgba(251, 114, 153, 0.8) 100%, transparent 0),
+    radial-gradient(2px 2px at 70% 30%, rgba(0, 174, 236, 0.8) 100%, transparent 0),
+    radial-gradient(1.5px 1.5px at 85% 85%, rgba(255, 255, 255, 0.6) 100%, transparent 0),
+    radial-gradient(1.5px 1.5px at 50% 50%, rgba(255, 255, 255, 0.5) 100%, transparent 0);
+  background-size: 320px 320px;
+  animation: dust-float-1 18s var(--ease-in-out) infinite alternate;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.cosmic-dust-secondary {
+  animation: dust-float-2 24s var(--ease-in-out) infinite alternate;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* HUD 掃描線光柵 */
+.hud-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.4) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+}
+
+/* 3D 雷達旋轉掃描光束 */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweep-beam {
+  background: conic-gradient(from 0deg, rgba(0, 174, 236, 0.45) 0deg, transparent 60deg, transparent 360deg);
+  animation: radar-sweep 3.5s linear infinite;
+}
+
+/* 浮動實體壓克力標籤 (Acrylic Floating Badge) */
+.acrylic-badge {
+  background: rgba(15, 20, 35, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 
+    0 8px 18px -4px rgba(0, 0, 0, 0.7),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+/* 凹陷倒角刻度托盤 (Inner Inset Tray) */
+.inner-inset-tray {
+  background: linear-gradient(160deg, rgba(4, 6, 12, 0.75) 0%, rgba(10, 14, 24, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 
+    inset 0 2px 5px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================================================
+   SPECULAR SHEEN SWEEP (稜鏡流光鏡面高光掃掠)
+   ========================================================================== */
+.sheen-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.sheen-wrapper::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -120%;
+  width: 70%;
+  height: 220%;
+  background: linear-gradient(
+    45deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.02) 35%, 
+    rgba(251, 114, 153, 0.2) 48%,
+    rgba(255, 255, 255, 0.35) 50%, 
+    rgba(0, 174, 236, 0.2) 52%,
+    rgba(255, 255, 255, 0.02) 65%, 
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  transition: transform 0.85s var(--ease-spring);
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sheen-wrapper:hover::after {
+    transform: translateX(380%) rotate(25deg);
+  }
+}
+
+/* ==========================================================================
+   LIQUID SLIDING PILL (水銀動態滑動藥丸指示器)
+   ========================================================================== */
+.liquid-pill-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+  padding: 4px;
+}
+
+.liquid-pill-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.06) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 4px 14px -2px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(251, 114, 153, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transition: transform 320ms var(--ease-spring), width 320ms var(--ease-spring);
+  pointer-events: none;
+}
+
+/* Logo 微動態：柔和呼吸彈跳 */
+.logo-interactive {
+  transition: transform 350ms var(--ease-spring), filter 350ms var(--ease-spring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .logo-interactive:hover {
+    transform: scale(1.06) rotate(3deg);
+    filter: drop-shadow(0 0 14px rgba(251, 114, 153, 0.55));
+  }
+}
+
+/* ==========================================================================
+   BUTTON-IN-BUTTON (互動鈕架構與物理壓感)
+   ========================================================================== */
+.btn-press {
+  transition: transform 120ms var(--ease-out), 
+              box-shadow 120ms var(--ease-out), 
+              background-color 120ms var(--ease-out), 
+              border-color 120ms var(--ease-out);
+}
+
+.btn-press:active {
+  transform: scale(0.965);
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #05060a, 0 0 0 4px rgba(251, 114, 153, 0.65);
+}
+
+/* 雙層膠囊按鈕 (Button-in-Button) */
+.btn-nested-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 9999px;
+  padding: 0.625rem 1.25rem 0.625rem 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: transform 0.3s var(--ease-spring), background-color 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-spring), border-color 0.3s var(--ease-spring);
+}
+
+.btn-nested-pill .btn-nested-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  width: 1.875rem;
+  height: 1.875rem;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transition: transform 0.3s var(--ease-spring);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-nested-pill:hover .btn-nested-icon {
+    transform: translateX(2px) translateY(-1px) scale(1.08);
+  }
+}
+
+/* ==========================================================================
+   STAGGERED ENTRY ANIMATION (瀑布流依序入場)
+   ========================================================================== */
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-stagger-1 { animation: fade-slide-up 0.5s var(--ease-cinematic) both; }
+.animate-stagger-2 { animation: fade-slide-up 0.5s 0.08s var(--ease-cinematic) both; }
+.animate-stagger-3 { animation: fade-slide-up 0.5s 0.16s var(--ease-cinematic) both; }
+.animate-stagger-4 { animation: fade-slide-up 0.5s 0.24s var(--ease-cinematic) both; }
+.animate-stagger-5 { animation: fade-slide-up 0.5s 0.32s var(--ease-cinematic) both; }
+
+/* Squircle 平滑連續曲率圓角 */
+.squircle {
+  border-radius: 22%;
+}
+
+.squircle-lg {
+  border-radius: 26%;
+}
+
+.squircle-avatar {
+  border-radius: 24%;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+/* 擬物立體按鈕 (含真光學折射) */
+.btn-3d {
+  position: relative;
+  transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
+  transform: translateY(0);
+}
+
+.btn-3d:active {
+  transform: translateY(2px) scale(0.97);
+  box-shadow: 
+    0 2px 5px -1px rgba(0, 0, 0, 0.6),
+    inset 0 2px 4px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+.btn-3d-pink {
+  background: linear-gradient(180deg, #ff85a7 0%, #fb7299 45%, #e0537c 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  box-shadow: 
+    0 6px 18px -2px rgba(251, 114, 153, 0.55),
+    0 2px 4px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.btn-3d-blue {
+  background: linear-gradient(180deg, #38c8ff 0%, #00aeec 45%, #0093c7 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  box-shadow: 
+    0 6px 18px -2px rgba(0, 174, 236, 0.55),
+    0 2px 4px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.btn-3d-dark {
+  background: linear-gradient(180deg, rgba(36, 42, 64, 0.85) 0%, rgba(18, 20, 32, 0.95) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+  box-shadow: 
+    0 5px 14px -2px rgba(2, 6, 23, 0.6),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* 晶瑩果凍標籤 (Jelly Badges) */
+.jelly-badge {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 3px 8px -1px rgba(0, 0, 0, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.jelly-badge-pink {
+  background: linear-gradient(135deg, rgba(251, 114, 153, 0.28) 0%, rgba(251, 114, 153, 0.08) 100%);
+  border: 1px solid rgba(251, 114, 153, 0.45);
+  box-shadow: 
+    0 3px 10px rgba(251, 114, 153, 0.32),
+    inset 0 1px 1px rgba(255, 255, 255, 0.45);
+}
+
+.jelly-badge-red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.12) 100%);
+  border: 1px solid rgba(248, 113, 113, 0.55);
+  box-shadow: 
+    0 0 14px rgba(239, 68, 68, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55);
+}
+
+/* 直播立體呼吸指示燈 */
+.live-pulse-lamp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.live-pulse-lamp::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: #ef4444;
+  animation: live-beacon 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes live-beacon {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* 高端深邃背景空間：Cyber Grid 網格與調和色散 */
+.bg-spatial-grid {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* 真·玻璃擬態面板 (收斂 blur 採樣以減輕 GPU 紋理負擔) */
+.glass-panel-luxury {
+  background: linear-gradient(135deg, rgba(18, 22, 38, 0.8) 0%, rgba(10, 12, 22, 0.85) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 
+    0 24px 50px -12px rgba(2, 6, 23, 0.8),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+/* 長列表虛擬排版效能優化 (Content Visibility - 離屏卡片不參與即時佈局與重繪) */
+.card-content-visibility {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 240px;
+}
+
+/* 骨架載入器流光動畫 */
+.shimmer-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 1rem;
+}
+
+.shimmer-skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(255, 255, 255, 0.1) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 隱藏原生滾動條但保留功能 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 自訂精緻滑動條 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 12, 18, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 114, 153, 0.45);
+}
+
+/* 手機安全區域 (Safe Area) */
+.safe-pb {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-mb {
+  margin-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* 無障礙動效保底 (Reduced Motion) */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

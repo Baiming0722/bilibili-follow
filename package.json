@@ -1,0 +1,63 @@
+{
+  "name": "bilibili-follow-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "author": "Baiming",
+  "type": "module",
+  "main": "electron/main.js",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"server,web\" -c \"blue,green\" \"npm run dev -w server\" \"npm run dev -w web\"",
+    "dev:server": "npm run dev -w server",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w server && npm run build -w web",
+    "build:server": "npm run build -w server",
+    "build:web": "npm run build -w web",
+    "start": "npm run start -w server",
+    "test:bilibili": "npm run test:bilibili -w server",
+    "electron:start": "electron .",
+    "dist:win": "npm run build && electron-builder --win portable"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "electron": "44.0.0",
+    "electron-builder": "26.15.7"
+  },
+  "build": {
+    "appId": "com.bilibili.follow",
+    "productName": "B站特別關注",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/main.js",
+      "package.json",
+      "server/package.json",
+      "server/dist/**/*",
+      "web/package.json",
+      "web/dist/**/*",
+      "build/icon.png",
+      "!**/node_modules/.vite/**"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "build/icon.png",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "portable": {
+      "artifactName": "${productName} Portable ${version}.exe"
+    },
+    "asar": true
+  }
+}
