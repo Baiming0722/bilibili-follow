@@ -28,14 +28,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Install Dependencies
+      - name: Accept Android SDK Licenses
         run: |
-          npm install
-          npm install -w web
-          npm install -w server
+         yes | sdkmanager --licenses || true
+
+      - run: npm install
 
       - name: Build Web Application
         run: |
